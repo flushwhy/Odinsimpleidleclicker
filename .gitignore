@@ -1,0 +1,32 @@
+# --- Binaries ---
+*.exe
+*.bin
+*.out
+*.app
+# Ignore the actual game binary (if you name it 'game')
+game
+game-windows.exe
+game-linux
+game-macos
+
+# --- Odin Specific ---
+# Odin creates a temporary 'bin' folder or obj files during build
+.odin/
+*.obj
+*.pdb
+*.ilk
+
+# --- OLS (Odin Language Server) ---
+# Usually you keep ols.json in the repo, but if it contains 
+# local absolute paths to your Z: drive, you might want to ignore it.
+# ols.json
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
