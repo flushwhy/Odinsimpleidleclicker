@@ -1,0 +1,55 @@
+name: Continuous Builds
+
+on:
+  # 1. Triggers on every commit/push
+  push:
+    branches: [ main ]
+  
+  # 2. Force Build: Adds a "Run Workflow" button in GitHub Actions UI
+  workflow_dispatch:
+
+  # 3. Nightly: Runs at 00:00 UTC every night
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            output: game_win.exe
+          - os: ubuntu-latest
+            output: game_linux
+          - os: macos-latest
+            output: game_mac
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Odin
+        uses: laytan/setup-odin@v1
+        with:
+          release: latest
+
+      - name: Install Linux Deps
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev
+
+      - name: Build
+        run: odin build . -out:${{ matrix.output }} -opt:2
+
+      # 4. Save the builds as downloadable "Artifacts"
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          # This labels the download (e.g., Nightly-windows-latest)
+          name: Build-${{ github.ref_name }}-${{ matrix.os }}
+          path: ${{ matrix.output }}
+          retention-days: 7 # Keeps storage clean by deleting old nightlies
