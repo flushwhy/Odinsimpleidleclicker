@@ -34,7 +34,7 @@ jobs:
       - name: Install Odin
         uses: laytan/setup-odin@v1
         with:
-          release: latest
+          odin-version: latest
 
       - name: Install Linux Deps
         if: matrix.os == 'ubuntu-latest'

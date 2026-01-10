@@ -3,7 +3,6 @@ package main
 import "vendor:raylib"
 import "core:fmt"
 import "core:strings"
-import "core:strconv"
 
 // --- Helper: Format 1000 to "1,000" ---
 format_commas :: proc(val: f64) -> string {
@@ -59,7 +58,7 @@ main :: proc() {
         gold_str := format_commas(gold)
         cost_str := format_commas(miner_cost)
 
-        raylib.DrawText("GOLD", 150, 40, 20, raylib.GRAY)
+        raylib.DrawText("Aurum", 150, 40, 20, raylib.GRAY)
         raylib.DrawText(fmt.ctprintf("%s", gold_str), 120, 70, 40, raylib.GOLD)
 
         // Click Area
