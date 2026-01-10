@@ -34,7 +34,8 @@ jobs:
       - name: Install Odin
         uses: laytan/setup-odin@v1
         with:
-          odin-version: latest
+          token: ${{ secrets.GITHUB_TOKEN }}
+          odin-version: v13.0.0
 
       - name: Install Linux Dependencies (Raylib)
         if: matrix.os == 'ubuntu-latest'
