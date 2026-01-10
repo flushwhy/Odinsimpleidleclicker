@@ -43,7 +43,7 @@ jobs:
           sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev
 
       - name: Build
-        run: odin build . -out:${{ matrix.output }} -opt:2
+        run: odin build . -out:${{ matrix.output }}
 
       # 4. Save the builds as downloadable "Artifacts"
       - name: Upload Build

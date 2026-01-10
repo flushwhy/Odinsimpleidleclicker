@@ -1,4 +1,4 @@
-lname: Build and Release
+name: Build and Release
 
 on:
   push:
@@ -42,7 +42,7 @@ jobs:
           sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev
 
       - name: Build Game
-        run: odin build . -out:${{ matrix.artifact_name }} -opt:2
+        run: odin build . -out:${{ matrix.artifact_name }}
 
       - name: Upload Artifact (For PRs/Pushes)
         uses: actions/upload-artifact@v4
