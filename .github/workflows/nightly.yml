@@ -1,10 +1,6 @@
 name: Continuous Builds
 
 on:
-  # 1. Triggers on every commit/push
-  push:
-    branches: [ main ]
-  
   # 2. Force Build: Adds a "Run Workflow" button in GitHub Actions UI
   workflow_dispatch:
 
@@ -34,7 +30,6 @@ jobs:
       - name: Install Odin
         uses: laytan/setup-odin@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           odin-version: master
 
       - name: Install Linux Deps
