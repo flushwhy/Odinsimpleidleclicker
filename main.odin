@@ -53,7 +53,7 @@ format_commas :: proc(val: f64) -> string {
 main :: proc() {
     raylib.InitWindow(400, 650, "Odin Idle Clicker")
     raylib.SetTargetFPS(60)
-    raylib.SetConfigFlags({.WINDOW_HIGHDPI, .SYNC_VSYNC_HINT})
+    raylib.SetConfigFlags({.VSYNC_HINT, .WINDOW_HIGHDPI })
 
     miners := [3]Upgrade {
         {name = "Manual Miner", base_cost = 15, base_power = 1.0, current_cost = 15},
@@ -120,7 +120,7 @@ main :: proc() {
                 }
             }
         }
-        
+
         raylib.BeginDrawing()
         raylib.ClearBackground({30, 30, 35, 255})
 
