@@ -8,34 +8,42 @@ import "vendor:raylib"
 
 // makes 1000 to 1,000
 format_commas :: proc(val: f64) -> string {
+    // Convert to absolute integer to handle digits
+    n := i64(val)
+    if n == 0 do return "0"
 
-	n := i64(val)
+    // Use a fixed buffer on the stack (max i64 is ~20 digits + commas + sign)
+    buf: [32]byte
+    cursor := len(buf)
+    
+    is_negative := n < 0
+    abs_n := abs(n)
+    
+    count := 0
+    for abs_n > 0 {
+        // Add comma every 3 digits, but not at the very start
+        if count > 0 && count % 3 == 0 {
+            cursor -= 1
+            buf[cursor] = ','
+        }
+        
+        // Extract last digit
+        digit := byte(abs_n % 10)
+        cursor -= 1
+        buf[cursor] = '0' + digit
+        
+        abs_n /= 10
+        count += 1
+    }
+    
+    if is_negative {
+        cursor -= 1
+        buf[cursor] = '-'
+    }
 
-	s := fmt.tprintf("%d", n)
-
-
-	if len(s) <= 3 do return s
-
-
-	builder := strings.builder_make(context.temp_allocator)
-
-
-	for i := 0; i < len(s); i += 1 {
-
-
-		if i > 0 && (len(s) - i) % 3 == 0 {
-
-			strings.write_byte(&builder, ',')
-
-		}
-
-		strings.write_byte(&builder, s[i])
-
-	}
-
-
-	return strings.to_string(builder)
-
+    // Allocate the result from the temp_allocator to match your original API
+    result := strings.clone(string(buf[cursor:]), context.temp_allocator)
+    return result
 }
 
 Upgrade :: struct {
@@ -50,7 +58,8 @@ gold: f64 = 0
 
 main :: proc() {
 	raylib.InitWindow(400, 600, "Odin Idle Clicker")
-	raylib.SetTargetFPS(60)
+	raylib.SetTargetFPS(300)
+	raylib.SetConfigFlags({.WINDOW_HIGHDPI, .VSYNC_HINT})
 
 	// Define our different miners
 	upgrades := [3]Upgrade {
