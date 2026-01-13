@@ -17,4 +17,13 @@ Nothing fancy.
 ## Version two
 
 Added more miners, and changed the name from Gold to Aurum (Gold ore and Aurum is the currency)
-Redid the interface
+Redid the 
+
+--- 
+## Version Three
+
+Redid the interface by making it dark and added menus for Mining, and Factories. 
+
+Now you mine the ore and then either wait to sell it at half price, or get a factory to make Ingots, or Jewelry from and make full price. 
+
+I added hover, reactive buttons and so on to add to the visuals.
