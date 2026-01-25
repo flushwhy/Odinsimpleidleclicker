@@ -1,9 +1,9 @@
-name: Release
+name: Nightly Builds
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 
 permissions:
   contents: write
@@ -17,24 +17,23 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            output: game.exe
-            zip_name: odin-miner-windows.zip
+            output: game-windows.exe
+            archive: game-windows.zip
           - os: ubuntu-latest
             output: game-linux
-            zip_name: odin-miner-linux.zip
+            archive: game-linux.tar.gz
           - os: macos-latest
             output: game-macos
-            zip_name: odin-miner-macos.zip
+            archive: game-macos.tar.gz
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Odin (WITH CACHING)
+      - name: Install Odin
         uses: laytan/setup-odin@v1
         with:
-          odin-version: dev-2024-07
-          cache: true
+          odin-version: master
 
       - name: Install Linux Deps
         if: matrix.os == 'ubuntu-latest'
@@ -43,37 +42,61 @@ jobs:
           sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev
 
       - name: Build
-        run: odin build . -out:${{ matrix.output }} -optimize:speed
+        run: odin build . -out:${{ matrix.output }}
 
-      - name: Package (Windows)
-        if: matrix.os == 'windows-latest'
-        run: Compress-Archive -Path "${{ matrix.output }}", "fonts" -DestinationPath "${{ matrix.zip_name }}"
-
-      - name: Package (Unix)
-        if: matrix.os != 'windows-latest'
-        run: zip -r ${{ matrix.zip_name }} ${{ matrix.output }} fonts/
+      - name: Package Artifacts
+        shell: bash
+        run: |
+          # Create a clean folder for the distribution
+          mkdir dist
+          cp ${{ matrix.output }} dist/
+          
+          # Copy fonts folder if it exists
+          if [ -d "fonts" ]; then
+            cp -r fonts dist/
+          fi
+          
+          # Compress based on OS
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            powershell Compress-Archive -Path dist/* -DestinationPath ${{ matrix.archive }}
+          else
+            tar -czf ${{ matrix.archive }} -C dist .
+          fi
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.zip_name }}
-          path: ${{ matrix.zip_name }}
+          name: ${{ matrix.archive }}
+          path: ${{ matrix.archive }}
 
-  publish:
-    name: Publish Release
+  release:
+    name: Create Nightly Release
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_OUTPUT
+
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
         with:
-          path: release-dist
+          path: release-assets
           merge-multiple: true
 
-      - name: Create GitHub Release
+      - name: Update rolling nightly release
         uses: softprops/action-gh-release@v2
         with:
-          files: release-dist/*.zip
-          generate_release_notes: true
+          tag_name: nightly
+          name: Nightly Build (${{ steps.date.outputs.date }})
+          prerelease: true
+          make_latest: true
+          body: |
+            🚧 **Rolling nightly build**
+            Generated on ${{ steps.date.outputs.date }}
+            Built with latest Odin (master).
+          files: |
+            release-assets/*.zip
+            release-assets/*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
