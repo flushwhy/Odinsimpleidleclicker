@@ -10,47 +10,70 @@ permissions:
 
 jobs:
   build:
-    name: Release (${{ matrix.os }})
+    name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: windows-latest
-            output: game-windows.exe
+            output: game.exe
+            zip_name: odin-miner-windows.zip
           - os: ubuntu-latest
             output: game-linux
+            zip_name: odin-miner-linux.zip
           - os: macos-latest
             output: game-macos
+            zip_name: odin-miner-macos.zip
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Odin (PINNED)
+      - name: Install Odin (WITH CACHING)
         uses: laytan/setup-odin@v1
         with:
           odin-version: dev-2024-07
+          cache: true
 
       - name: Install Linux Deps
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libasound2-dev libx11-dev libxrandr-dev \
-            libxi-dev libgl1-mesa-dev libglu1-mesa-dev \
-            libxcursor-dev libxinerama-dev
+          sudo apt-get install -y libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev
 
       - name: Build
-        run: odin build . -out:${{ matrix.output }}
+        run: odin build . -out:${{ matrix.output }} -optimize:speed
 
-      - name: Upload to GitHub Release
+      - name: Package (Windows)
+        if: matrix.os == 'windows-latest'
+        run: Compress-Archive -Path "${{ matrix.output }}", "fonts" -DestinationPath "${{ matrix.zip_name }}"
+
+      - name: Package (Unix)
+        if: matrix.os != 'windows-latest'
+        run: zip -r ${{ matrix.zip_name }} ${{ matrix.output }} fonts/
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.zip_name }}
+          path: ${{ matrix.zip_name }}
+
+  publish:
+    name: Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            game-windows.exe
-            game-linux
-            game-macos
+          files: release-dist/*.zip
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

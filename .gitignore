@@ -30,3 +30,7 @@ Thumbs.db
 .idea/
 *.sublime-project
 *.sublime-workspace
+
+
+# --- Game Data ---
+save.flsh
