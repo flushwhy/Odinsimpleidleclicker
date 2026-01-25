@@ -18,10 +18,13 @@ jobs:
         include:
           - os: windows-latest
             output: game-windows.exe
+            archive: game-windows.zip
           - os: ubuntu-latest
             output: game-linux
+            archive: game-linux.tar.gz
           - os: macos-latest
             output: game-macos
+            archive: game-macos.tar.gz
 
     steps:
       - name: Checkout
@@ -41,17 +44,39 @@ jobs:
       - name: Build
         run: odin build . -out:${{ matrix.output }}
 
+      - name: Package Artifacts
+        shell: bash
+        run: |
+          # Create a clean folder for the distribution
+          mkdir -p dist
+          cp ${{ matrix.output }} dist/
+          
+          # Copy fonts folder if it exists
+          if [ -d "fonts" ]; then
+            cp -r fonts dist/
+          fi
+          
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            7z a ${{ matrix.archive }} ./dist/*
+          else
+            tar -czf ${{ matrix.archive }} -C dist .
+          fi
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.output }}
-          path: ${{ matrix.output }}
+          name: ${{ matrix.archive }}
+          path: ${{ matrix.archive }}
 
   release:
     name: Create Nightly Release
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Get current date
+        id: date
+        run: echo "date=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_OUTPUT
+
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -62,15 +87,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: nightly
-          name: Nightly Build
+          name: Nightly Build (${{ steps.date.outputs.date }})
           prerelease: true
           make_latest: true
           body: |
-            🚧 Rolling nightly build
+            🚧 **Rolling nightly build**
+            Generated on ${{ steps.date.outputs.date }}
             Built with latest Odin (master).
           files: |
-            release-assets/game-windows.exe
-            release-assets/game-linux
-            release-assets/game-macos
+            release-assets/*.zip
+            release-assets/*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
