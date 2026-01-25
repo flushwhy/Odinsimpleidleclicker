@@ -255,7 +255,7 @@ main :: proc() {
             
             if show_credits {
                 draw_centered_text(font, "CREDITS", {50, 220, 300, 40}, 28, raylib.GOLD)
-                draw_text(font, "CODE: YOU", 75, 280, 18, raylib.WHITE)
+                draw_text(font, "CODE: gh/flushwhy", 75, 280, 18, raylib.WHITE)
                 draw_text(font, "ENGINE: ODIN + RAYLIB", 75, 310, 18, raylib.WHITE)
                 draw_text(font, "FONT: RADIO STARS", 75, 340, 18, raylib.SKYBLUE)
                 draw_text(font, "BY CHEQUERED INK", 75, 360, 12, raylib.LIGHTGRAY)
