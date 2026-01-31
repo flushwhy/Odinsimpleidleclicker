@@ -1,9 +1,10 @@
-name: Nightly Builds
+name: Weekly Builds
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 * * *'
+    # Runs at 00:00 every Sunday
+    - cron: '0 0 * * 0'
 
 permissions:
   contents: write
@@ -25,7 +26,6 @@ jobs:
           - os: macos-latest
             output: game-macos
             archive: game-macos.tar.gz
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,11 +47,8 @@ jobs:
       - name: Package Artifacts
         shell: bash
         run: |
-          # Create a clean folder for the distribution
           mkdir -p dist
           cp ${{ matrix.output }} dist/
-          
-          # Copy fonts folder if it exists
           if [ -d "fonts" ]; then
             cp -r fonts dist/
           fi
@@ -69,13 +66,13 @@ jobs:
           path: ${{ matrix.archive }}
 
   release:
-    name: Create Nightly Release
+    name: Create Weekly Release
     needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Get current date
         id: date
-        run: echo "date=$(date +'%Y-%m-%d %H:%M')" >> $GITHUB_OUTPUT
+        run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
@@ -83,15 +80,15 @@ jobs:
           path: release-assets
           merge-multiple: true
 
-      - name: Update rolling nightly release
+      - name: Update rolling weekly release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: nightly
-          name: Nightly Build (${{ steps.date.outputs.date }})
+          tag_name: weekly
+          name: Weekly Build (${{ steps.date.outputs.date }})
           prerelease: true
           make_latest: true
           body: |
-            🚧 **Rolling nightly build**
+            📅 **Weekly Automated Build**
             Generated on ${{ steps.date.outputs.date }}
             Built with latest Odin (master).
           files: |
